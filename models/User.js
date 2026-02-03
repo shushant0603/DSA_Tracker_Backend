@@ -20,6 +20,19 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters']
   },
+  // Email verification fields
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationOTP: {
+    type: String,
+    default: null
+  },
+  otpExpiry: {
+    type: Date,
+    default: null
+  },
   // Platform usernames - submitted once by user
   platformUsernames: {
     github: {
