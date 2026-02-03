@@ -14,7 +14,10 @@ dotenv.config({ path: './.env' });
 const app = express();
 
 // Middleware
-const allowedOrigin = process.env.ALLOWED_ORIGIN;
+const allowedOrigins = [
+  process.env.ALLOWED_ORIGIN,
+  'https://dsa-tracker-frontemd.onrender.com',
+].filter(Boolean); // Remove undefined values
 
 app.use(
   cors({
@@ -22,17 +25,21 @@ app.use(
       // allow Postman / curl (no origin)
       if (!origin) return callback(null, true);
 
-      if (origin === allowedOrigin) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
+      console.log(`CORS blocked origin: ${origin}`);
       return callback(new Error(`CORS blocked: ${origin}`));
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
-
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 
