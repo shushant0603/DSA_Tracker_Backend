@@ -17,7 +17,7 @@ const app = express();
 const corsOptions = {
   origin: [
     'https://dsa-tracker-frontemd.onrender.com',
-    'https://dsa-tracker-frontend.onrender.com',
+    // 'https://dsa-tracker-frontend.onrender.com',
     'http://localhost:5173',
     'http://localhost:3000'
   ],
