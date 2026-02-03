@@ -227,6 +227,28 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/questions/scheduled-revisions
+// @desc    Get questions due for scheduled revision
+// @access  Private
+router.get('/scheduled-revisions', auth, async (req, res) => {
+  try {
+    const now = new Date();
+    
+    const questions = await Question.find({
+      user: req.user._id,
+      'revisionSchedule.enabled': true,
+      'revisionSchedule.nextRevisionDate': { $lte: now }
+    })
+    .sort({ 'revisionSchedule.nextRevisionDate': 1 })
+    .lean();
+
+    res.json({ questions });
+  } catch (error) {
+    console.error('Get scheduled revisions error:', error);
+    res.status(500).json({ message: 'Server error while fetching scheduled revisions' });
+  }
+});
+
 // @route   GET /api/questions/:id
 // @desc    Get a specific question
 // @access  Private
@@ -325,15 +347,28 @@ router.delete('/:id', auth, async (req, res) => {
 // @access  Private
 router.patch('/:id/toggle-revision', auth, async (req, res) => {
   try {
-    const question = await Question.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { $set: { needsRevision: req.body.needsRevision } },
-      { new: true }
-    );
+    const { needsRevision } = req.body;
+    const question = await Question.findOne({ _id: req.params.id, user: req.user._id });
 
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
+
+    question.needsRevision = needsRevision;
+
+    // If marking as reviewed (not needing revision) and schedule is enabled, update next revision date
+    if (!needsRevision && question.revisionSchedule?.enabled) {
+      const now = new Date();
+      question.revisionSchedule.lastRevisedDate = now;
+      question.revisionSchedule.timesRevised = (question.revisionSchedule.timesRevised || 0) + 1;
+      
+      // Calculate next revision date
+      const nextDate = new Date(now);
+      nextDate.setDate(nextDate.getDate() + question.revisionSchedule.intervalDays);
+      question.revisionSchedule.nextRevisionDate = nextDate;
+    }
+
+    await question.save();
 
     res.json({
       message: 'Revision status updated successfully',
@@ -342,6 +377,130 @@ router.patch('/:id/toggle-revision', auth, async (req, res) => {
   } catch (error) {
     console.error('Toggle revision error:', error);
     res.status(500).json({ message: 'Server error while updating revision status' });
+  }
+});
+
+// @route   PATCH /api/questions/:id/revision-schedule
+// @desc    Update revision schedule settings for a question
+// @access  Private
+router.patch('/:id/revision-schedule', [
+  auth,
+  body('enabled').optional().isBoolean().withMessage('enabled must be a boolean'),
+  body('intervalDays').optional().isInt({ min: 1, max: 365 }).withMessage('Interval must be between 1 and 365 days')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+    }
+
+    const { enabled, intervalDays } = req.body;
+    const question = await Question.findOne({ _id: req.params.id, user: req.user._id });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    // Initialize revisionSchedule if it doesn't exist
+    if (!question.revisionSchedule) {
+      question.revisionSchedule = {
+        enabled: false,
+        intervalDays: 3,
+        nextRevisionDate: null,
+        lastRevisedDate: null,
+        timesRevised: 0
+      };
+    }
+
+    if (typeof enabled === 'boolean') {
+      question.revisionSchedule.enabled = enabled;
+      
+      // If enabling, set the next revision date
+      if (enabled) {
+        const interval = intervalDays || question.revisionSchedule.intervalDays || 3;
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + interval);
+        question.revisionSchedule.nextRevisionDate = nextDate;
+        question.needsRevision = false; // Will show up when time comes
+      } else {
+        // If disabling, clear the next revision date
+        question.revisionSchedule.nextRevisionDate = null;
+      }
+    }
+
+    if (intervalDays) {
+      question.revisionSchedule.intervalDays = intervalDays;
+      
+      // Recalculate next revision date if enabled
+      if (question.revisionSchedule.enabled) {
+        const baseDate = question.revisionSchedule.lastRevisedDate || new Date();
+        const nextDate = new Date(baseDate);
+        nextDate.setDate(nextDate.getDate() + intervalDays);
+        question.revisionSchedule.nextRevisionDate = nextDate;
+      }
+    }
+
+    await question.save();
+
+    res.json({
+      message: 'Revision schedule updated successfully',
+      question
+    });
+  } catch (error) {
+    console.error('Update revision schedule error:', error);
+    res.status(500).json({ message: 'Server error while updating revision schedule' });
+  }
+});
+
+// @route   PATCH /api/questions/:id/solution
+// @desc    Save code solution for a question
+// @access  Private
+router.patch('/:id/solution', [
+  auth,
+  body('code')
+    .isString()
+    .withMessage('Code must be a string')
+    .isLength({ max: 50000 })
+    .withMessage('Code cannot be more than 50000 characters'),
+  body('language')
+    .isIn(['cpp', 'python', 'java', 'javascript'])
+    .withMessage('Invalid language')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
+    }
+
+    const { code, language } = req.body;
+
+    const question = await Question.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    question.savedSolution = {
+      code,
+      language,
+      lastUpdated: new Date()
+    };
+
+    await question.save();
+
+    res.json({
+      message: 'Solution saved successfully',
+      question
+    });
+  } catch (error) {
+    console.error('Save solution error:', error);
+    res.status(500).json({ message: 'Server error while saving solution' });
   }
 });
 

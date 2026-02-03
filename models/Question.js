@@ -60,6 +60,31 @@ const questionSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Spaced Repetition / Scheduled Revision Fields
+  revisionSchedule: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    intervalDays: {
+      type: Number,
+      default: 3,
+      min: [1, 'Interval must be at least 1 day'],
+      max: [365, 'Interval cannot be more than 365 days']
+    },
+    nextRevisionDate: {
+      type: Date,
+      default: null
+    },
+    lastRevisedDate: {
+      type: Date,
+      default: null
+    },
+    timesRevised: {
+      type: Number,
+      default: 0
+    }
+  },
   solvedDate: {
     type: Date,
     default: Date.now
@@ -72,6 +97,23 @@ const questionSchema = new mongoose.Schema({
     type: Number,
     min: [1, 'Rating must be at least 1'],
     max: [5, 'Rating cannot be more than 5']
+  },
+  // Saved Solution for Code Playground
+  savedSolution: {
+    code: {
+      type: String,
+      default: '',
+      maxlength: [50000, 'Code cannot be more than 50000 characters']
+    },
+    language: {
+      type: String,
+      enum: ['cpp', 'python', 'java', 'javascript'],
+      default: 'cpp'
+    },
+    lastUpdated: {
+      type: Date,
+      default: null
+    }
   }
 }, {
   timestamps: true
@@ -82,5 +124,6 @@ questionSchema.index({ user: 1, solvedDate: -1 });
 questionSchema.index({ user: 1, topic: 1 });
 questionSchema.index({ user: 1, needsRevision: 1 });
 questionSchema.index({ user: 1, platform: 1 });
+questionSchema.index({ user: 1, 'revisionSchedule.nextRevisionDate': 1 });
 
 module.exports = mongoose.model('Question', questionSchema);

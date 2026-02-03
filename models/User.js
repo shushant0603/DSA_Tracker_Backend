@@ -20,6 +20,29 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters']
   },
+  // Platform usernames - submitted once by user
+  platformUsernames: {
+    github: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    leetcode: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    codeforces: {
+      type: String,
+      trim: true,
+      default: null
+    }
+  },
+  // Flag to track if platform data has been submitted
+  hasPlatformData: {
+    type: Boolean,
+    default: false
+  },
   preferences: {
     darkMode: {
       type: Boolean,
