@@ -13,33 +13,25 @@ dotenv.config({ path: './.env' });
 
 const app = express();
 
-// Middleware
-const allowedOrigins = [
-  process.env.ALLOWED_ORIGIN,
-  'https://dsa-tracker-frontemd.onrender.com',
-].filter(Boolean); // Remove undefined values
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'https://dsa-tracker-frontemd.onrender.com',
+    'https://dsa-tracker-frontend.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200
+};
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow Postman / curl (no origin)
-      if (!origin) return callback(null, true);
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.log(`CORS blocked origin: ${origin}`);
-      return callback(new Error(`CORS blocked: ${origin}`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-);
-
-// Handle preflight requests
-app.options('*', cors());
+// Handle preflight for all routes
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
