@@ -4,8 +4,8 @@
   "description": "Backend for DSA Learning & Revision Tracker",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "axios": "^1.13.2",
