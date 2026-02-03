@@ -20,50 +20,66 @@ router.post('/register', [
   body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], async (req, res) => {
+  console.log('📝 REGISTER: Request received', { name: req.body.name, email: req.body.email });
+  
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ REGISTER: Validation failed', errors.array());
       return res.status(400).json({ 
         message: 'Validation failed', 
         errors: errors.array() 
       });
     }
+    console.log('✅ REGISTER: Validation passed');
 
     const { name, email, password } = req.body;
 
     // Check if user already exists
+    console.log('🔍 REGISTER: Checking existing user...');
     const existingUser = await User.findOne({ email });
+    
     if (existingUser) {
+      console.log('👤 REGISTER: User exists, isVerified:', existingUser.isVerified);
       // If user exists but not verified, allow re-registration
       if (!existingUser.isVerified) {
         // Generate new OTP
         const otp = generateOTP();
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        console.log('🔢 REGISTER: Generated OTP for existing unverified user');
 
         existingUser.name = name;
         existingUser.password = password;
         existingUser.verificationOTP = otp;
         existingUser.otpExpiry = otpExpiry;
         await existingUser.save();
+        console.log('💾 REGISTER: User updated');
 
         // Send OTP email
+        console.log('📧 REGISTER: Sending OTP email...');
         const emailResult = await sendOTPEmail(email, otp, name);
+        console.log('📧 REGISTER: Email result:', emailResult);
+        
         if (!emailResult.success) {
+          console.log('❌ REGISTER: Email failed', emailResult.error);
           return res.status(500).json({ message: 'Failed to send verification email' });
         }
 
+        console.log('✅ REGISTER: Success - OTP sent to existing unverified user');
         return res.status(200).json({
           message: 'OTP sent to your email',
           requiresVerification: true,
           email: email
         });
       }
+      console.log('❌ REGISTER: User already verified');
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Generate OTP
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    console.log('🔢 REGISTER: Generated OTP for new user');
 
     // Create new user (unverified)
     const user = new User({ 
@@ -75,15 +91,24 @@ router.post('/register', [
       otpExpiry: otpExpiry
     });
     await user.save();
+    console.log('💾 REGISTER: New user saved to DB');
 
     // Send OTP email
+    console.log('📧 REGISTER: Sending OTP email to new user...');
+    console.log('📧 REGISTER: EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
+    console.log('📧 REGISTER: EMAIL_PASSWORD:', process.env.EMAIL_PASSWORD ? 'SET' : 'NOT SET');
+    
     const emailResult = await sendOTPEmail(email, otp, name);
+    console.log('📧 REGISTER: Email result:', emailResult);
+    
     if (!emailResult.success) {
+      console.log('❌ REGISTER: Email failed, deleting user...', emailResult.error);
       // Delete user if email fails
       await User.findByIdAndDelete(user._id);
       return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
+    console.log('✅ REGISTER: Success - New user registered and OTP sent');
     res.status(201).json({
       message: 'OTP sent to your email',
       requiresVerification: true,
