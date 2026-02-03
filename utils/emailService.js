@@ -77,7 +77,7 @@ const sendOTPEmail = async (email, otp, name) => {
                   <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
                   
                   <p style="color: #a0aec0; font-size: 12px; text-align: center; margin: 0;">
-                    © 2024 DSA Tracker. Built with ❤️ for developers.
+                    © 2026 DSA Tracker. Built with @shushant0603 for developers.
                   </p>
                 </div>
               </td>
@@ -147,7 +147,7 @@ const sendWelcomeEmail = async (email, name) => {
                   <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
                   
                   <p style="color: #a0aec0; font-size: 12px; text-align: center; margin: 0;">
-                    © 2024 DSA Tracker. Built with ❤️ for developers.
+                    © 2026 DSA Tracker. Built with @shushant0603 for developers.
                   </p>
                 </div>
               </td>
