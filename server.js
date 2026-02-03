@@ -14,7 +14,26 @@ dotenv.config({ path: './.env' });
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow Postman / curl (no origin)
+      if (!origin) return callback(null, true);
+
+      if (origin === allowedOrigin) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
+    credentials: true
+  })
+);
+
+
+
 app.use(express.json());
 
 // Routes
