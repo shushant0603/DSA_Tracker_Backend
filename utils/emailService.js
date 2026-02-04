@@ -1,25 +1,21 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  console.log("📧 DEBUG CONFIG:", {
-    host: process.env.EMAIL_HOST,
-    port: 465, // Hardcoded for safety
-    secure: true, // Hardcoded for safety
-    user: process.env.EMAIL_USER ? "Set" : "Not Set",
-  });
-
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465, // Gmail ka sabse reliable port
-    secure: true, // Port 465 ke liye ye HAMESHA true hota hai
+    service: 'gmail', // Host/Port ki jagah wapas 'service' use karein (Internal optimizations ke liye)
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+    // 👇 Ye settings add karein connection bachane ke liye
+    pool: true, // Connection open rakhta hai
+    maxConnections: 1,
+    secure: true,
     tls: {
-      // Ye line server ke self-signed certificate errors ko ignore karti hai
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false, // SSL errors ignore karega
+    },
+    // 👇 Network fix for Render
+    family: 4, // Force IPv4 (Ye ETIMEDOUT fix kar sakta hai)
   });
 };
 
