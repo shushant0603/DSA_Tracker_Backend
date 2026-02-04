@@ -15,22 +15,34 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: [
-    'https://dsa-tracker-frontemd.onrender.com',
-    // 'https://dsa-tracker-frontend.onrender.com',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://dsa-tracker-frontend-6lun.onrender.com',
+      'http://localhost:5173',
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200
+  exposedHeaders: ['Content-Length', 'X-JSON'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// Apply CORS middleware
+// Apply CORS middleware BEFORE other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight for all routes
+// Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
 app.use(express.json());
