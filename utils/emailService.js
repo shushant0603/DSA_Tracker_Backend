@@ -2,14 +2,24 @@ const nodemailer = require('nodemailer');
 
 // Create transporter for sending emails
 const createTransporter = () => {
+  console.log("📧 DEBUG CONFIG:", {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    user: process.env.EMAIL_USER ? "Set" : "Not Set",
+    pass: process.env.EMAIL_PASSWORD ? "Set" : "Not Set"
+  });
+
   return nodemailer.createTransport({
-     host: process.env.EMAIL_HOST, // Ab ye 'smtp.gmail.com' uthayega
-    port: process.env.EMAIL_PORT, // Ab ye '465' uthayega
-    secure: true, // Port 465 ke liye ye TRUE hona chahiye
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: Number(process.env.EMAIL_PORT) || 587, // Ensure this is 587 in .env
+    secure: false, // 587 ke liye ye False hi hona chahiye
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false // Cloud server SSL issues fix karne ke liye
+    }
   });
 };
 
