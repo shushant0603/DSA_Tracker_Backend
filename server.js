@@ -19,6 +19,7 @@ const corsOptions = {
     const allowedOrigins = [
       'https://dsa-tracker-frontend-6lun.onrender.com',
       'http://localhost:5173',
+      'https://dsa-tracker-frontend-one.vercel.app/'
     ];
     
     // Allow requests with no origin (like mobile apps or curl requests)
