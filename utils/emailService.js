@@ -1,24 +1,24 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter for sending emails
 const createTransporter = () => {
   console.log("📧 DEBUG CONFIG:", {
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
+    port: 465, // Hardcoded for safety
+    secure: true, // Hardcoded for safety
     user: process.env.EMAIL_USER ? "Set" : "Not Set",
-    pass: process.env.EMAIL_PASSWORD ? "Set" : "Not Set"
   });
 
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(process.env.EMAIL_PORT) || 587, // Ensure this is 587 in .env
-    secure: false, // 587 ke liye ye False hi hona chahiye
+    host: 'smtp.gmail.com',
+    port: 465, // Gmail ka sabse reliable port
+    secure: true, // Port 465 ke liye ye HAMESHA true hota hai
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
     tls: {
-      rejectUnauthorized: false // Cloud server SSL issues fix karne ke liye
+      // Ye line server ke self-signed certificate errors ko ignore karti hai
+      rejectUnauthorized: false
     }
   });
 };
