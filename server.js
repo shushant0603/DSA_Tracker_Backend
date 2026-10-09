@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const connectDB = require('./config/Db');
 // const leetcodeRoutes = require("./routes/leetcode");
 // const Leetcode from 'leetcode-api';
 
@@ -12,6 +13,8 @@ const Leetcode = require('./routes/leetcode');
 dotenv.config({ path: './.env' });
 
 const app = express();
+// Connect to MongoDB
+connectDB();
 
 // CORS Configuration
 const corsOptions = {
@@ -43,8 +46,7 @@ const corsOptions = {
 // Apply CORS middleware BEFORE other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+
 
 app.use(express.json());
 
@@ -54,6 +56,9 @@ app.use('/api/questions', require('./routes/questions'));
 app.use('/api/user', require('./routes/user'));
 app.use("/api/leetcode",Leetcode);
 app.use("/api/codeforce",require('./routes/codeforces'));
+
+//start version2 
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -66,14 +71,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/dsa-tracker')
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error);
-  });
+
 
 const PORT = process.env.PORT || 3000;
 

@@ -1,506 +1,186 @@
 const express = require('express');
-const { body, validationResult, query } = require('express-validator');
-const Question = require('../models/Question');
-const auth = require('../middleware/auth');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
 
-// @route   POST /api/questions
-// @desc    Add a new question
-// @access  Private
-router.post('/', [
-  auth,
-  body('title')
-    .trim()
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Title is required and must be less than 200 characters'),
-  body('link')
-    .isURL()
-    .withMessage('Please enter a valid URL'),
-  body('platform')
-    .isIn(['LeetCode', 'Codeforces', 'GeeksforGeeks', 'HackerRank', 'CodeChef', 'AtCoder', 'Other'])
-    .withMessage('Invalid platform'),
-  body('topic')
-    .isArray({ min: 1 }) // Ensure topic is an array with at least one element
-    .withMessage('Topic must be an array with at least one topic')
-    .custom((topics) => {
-      const validTopics = [
-        'Array', 'String', 'Hash Table', 'Dynamic Programming', 'Math', 'Sorting',
-        'Greedy', 'Depth-First Search', 'Breadth-First Search', 'Tree', 'Binary Search',
-        'Matrix', 'Two Pointers', 'Bit Manipulation', 'Stack', 'Heap', 'Graph',
-        'Design', 'Backtracking', 'Sliding Window', 'Union Find', 'Trie', 'Recursion',
-        'Binary Tree', 'Binary Search Tree', 'Linked List', 'Queue', 'Other'
-      ];
-      // Check if every topic in the array is valid
-      const invalidTopics = topics.filter(topic => !validTopics.includes(topic));
-      if (invalidTopics.length > 0) {
-        throw new Error(`Invalid topics: ${invalidTopics.join(', ')}`);
-      }
-      return true;
-    }),
-  body('difficulty')
-    .isIn(['Easy', 'Medium', 'Hard'])
-    .withMessage('Invalid difficulty'),
-  body('description')
-    .optional()
-    .isLength({ max: 1000 })
-    .withMessage('Description must be less than 1000 characters'),
-  body('notes')
-    .optional()
-    .isLength({ max: 2000 })
-    .withMessage('Notes must be less than 2000 characters'),
-  body('timeSpent')
-    .optional()
-    .isInt({ min: 0 })
-    .withMessage('Time spent must be a positive number'),
-  body('rating')
-    .optional()
-    .isInt({ min: 1, max: 5 })
-    .withMessage('Rating must be between 1 and 5')
-], async (req, res) => {
+let cachedQuestions = null;
+let cachedBooksMeta = null;
+
+function getQuestions() {
+  const filePath = path.join(__dirname, '../data/questions.json');
+  if (!fs.existsSync(filePath)) return [];
+  cachedQuestions = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  return cachedQuestions;
+}
+
+function getBooksMeta() {
+  const filePath = path.join(__dirname, '../data/books_meta.json');
+  if (!fs.existsSync(filePath)) return [];
+  cachedBooksMeta = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  return cachedBooksMeta;
+}
+
+// GET /api/questions/books -> All books with chapter summaries & stats
+router.get('/books', (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: 'Validation failed', 
-        errors: errors.array() 
-      });
-    }
-
-    const questionData = {
-      ...req.body,
-      user: req.user._id
-    };
-
-    const question = new Question(questionData);
-    await question.save();
-
-    res.status(201).json({
-      message: 'Question added successfully',
-      question
-    });
-  } catch (error) {
-    console.error('Add question error:', error);
-    res.status(500).json({ message: 'Server error while adding question' });
+    const meta = getBooksMeta();
+    res.json(meta);
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading books metadata', error: err.message });
   }
 });
 
-// @route   GET /api/questions
-// @desc    Get all questions for the user with filtering and pagination
-// @access  Private
-router.get('/', [
-  auth,
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-  query('topic').optional().isString().withMessage('Topic must be a string'),
-  query('platform').optional().isString().withMessage('Platform must be a string'),
-  query('difficulty').optional().isIn(['Easy', 'Medium', 'Hard']).withMessage('Invalid difficulty'),
-  query('needsRevision').optional().isBoolean().withMessage('needsRevision must be a boolean'),
-  query('search').optional().isString().withMessage('Search must be a string'),
-  query('sortBy').optional().isIn(['solvedDate', 'title', 'difficulty', 'topic']).withMessage('Invalid sort field'),
-  query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc')
-], async (req, res) => {
+// GET /api/questions/book/:bookId -> Hierarchical structure of a specific book
+router.get('/book/:bookId', (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: 'Validation failed', 
-        errors: errors.array() 
-      });
+    const { bookId } = req.params;
+    const questions = getQuestions();
+    const booksMeta = getBooksMeta();
+
+    const bookMeta = booksMeta.find(b => b.id === bookId || b.name.toLowerCase().includes(bookId.toLowerCase()));
+    
+    // Filter questions for this book
+    const bookQuestions = questions.filter(q => q.bookId === bookId || q.book === (bookMeta ? bookMeta.name : bookId));
+
+    if (bookQuestions.length === 0) {
+      return res.status(404).json({ message: 'Book not found or empty' });
     }
 
-    const {
-      page = 1,
-      limit = 20,
-      topic,
-      platform,
-      difficulty,
-      needsRevision,
-      search,
-      sortBy = 'solvedDate',
-      sortOrder = 'desc'
-    } = req.query;
+    // Group by chapter -> section -> questions
+    const chaptersMap = new Map();
 
-    // Build filter object
-    const filter = { user: req.user._id };
-    
-    if (topic) filter.topic = topic;
-    if (platform) filter.platform = platform;
-    if (difficulty) filter.difficulty = difficulty;
-    if (needsRevision !== undefined) filter.needsRevision = needsRevision === 'true';
-    
+    for (const q of bookQuestions) {
+      const chName = q.chapter || 'General';
+      const secName = q.section || 'General';
+
+      if (!chaptersMap.has(chName)) {
+        chaptersMap.set(chName, new Map());
+      }
+      const sectionsMap = chaptersMap.get(chName);
+
+      if (!sectionsMap.has(secName)) {
+        sectionsMap.set(secName, []);
+      }
+      sectionsMap.get(secName).push(q);
+    }
+
+    const structuredChapters = [];
+    chaptersMap.forEach((sectionsMap, chapterName) => {
+      const sections = [];
+      let chapterTotal = 0;
+      let chapterSolved = 0;
+
+      sectionsMap.forEach((qList, sectionName) => {
+        chapterTotal += qList.length;
+        chapterSolved += qList.filter(q => q.solved).length;
+        sections.push({
+          name: sectionName,
+          total: qList.length,
+          solved: qList.filter(q => q.solved).length,
+          questions: qList,
+        });
+      });
+
+      structuredChapters.push({
+        name: chapterName,
+        total: chapterTotal,
+        solved: chapterSolved,
+        sections,
+      });
+    });
+
+    res.json({
+      book: bookMeta || { id: bookId, name: bookQuestions[0].book },
+      totalQuestions: bookQuestions.length,
+      solvedQuestions: bookQuestions.filter(q => q.solved).length,
+      chapters: structuredChapters,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading book data', error: err.message });
+  }
+});
+
+// GET /api/questions/all
+// Query params: book, bookId, chapter, section, solved, status, search, page, limit
+router.get('/all', (req, res) => {
+  try {
+    let questions = getQuestions();
+
+    const { book, bookId, chapter, section, solved, status, search, page = 1, limit = 50 } = req.query;
+
+    if (bookId) {
+      questions = questions.filter(q => q.bookId === bookId);
+    } else if (book) {
+      questions = questions.filter(q => q.book === book || (q.bookId && q.bookId.toLowerCase() === book.toLowerCase()));
+    }
+    if (chapter) {
+      questions = questions.filter(q => q.chapter.toLowerCase().includes(chapter.toLowerCase()));
+    }
+    if (section) {
+      questions = questions.filter(q => q.section.toLowerCase().includes(section.toLowerCase()));
+    }
+    if (status) {
+      questions = questions.filter(q => q.status === status);
+    }
+    if (solved !== undefined && solved !== '') {
+      questions = questions.filter(q => q.solved === (solved === 'true'));
+    }
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { notes: { $regex: search, $options: 'i' } }
-      ];
+      const s = search.toLowerCase();
+      questions = questions.filter(q =>
+        q.title.toLowerCase().includes(s) ||
+        String(q.id).includes(s) ||
+        q.section.toLowerCase().includes(s) ||
+        q.chapter.toLowerCase().includes(s)
+      );
     }
 
-    // Build sort object
-    const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const questions = await Question.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
-
-    const total = await Question.countDocuments(filter);
+    const total = questions.length;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const paginated = limitNum === 0 ? questions : questions.slice((pageNum - 1) * limitNum, pageNum * limitNum);
 
     res.json({
-      questions,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / parseInt(limit)),
-        totalQuestions: total,
-        hasNext: skip + questions.length < total,
-        hasPrev: parseInt(page) > 1
-      }
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: limitNum === 0 ? 1 : Math.ceil(total / limitNum),
+      questions: paginated,
     });
-  } catch (error) {
-    console.error('Get questions error:', error);
-    res.status(500).json({ message: 'Server error while fetching questions' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading questions', error: err.message });
   }
 });
 
-// @route   GET /api/questions/stats
-// @desc    Get statistics for the user's questions
-// @access  Private
-router.get('/stats', auth, async (req, res) => {
+// GET /api/questions/meta
+router.get('/meta', (req, res) => {
   try {
-    const userId = req.user._id;
+    const questions = getQuestions();
+    const books = [...new Set(questions.map(q => q.book))];
+    const chapters = [...new Set(questions.map(q => q.chapter).filter(Boolean))];
+    const totalSolved = questions.filter(q => q.solved).length;
 
-    // Get total count
-    const totalQuestions = await Question.countDocuments({ user: userId });
-
-    // Get count by topic
-    const topicStats = await Question.aggregate([
-      { $match: { user: userId } },
-      { $group: { _id: '$topic', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Get count by difficulty
-    const difficultyStats = await Question.aggregate([
-      { $match: { user: userId } },
-      { $group: { _id: '$difficulty', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Get count by platform
-    const platformStats = await Question.aggregate([
-      { $match: { user: userId } },
-      { $group: { _id: '$platform', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Get revision count
-    const revisionCount = await Question.countDocuments({ 
-      user: userId, 
-      needsRevision: true 
-    });
-
-    // Get questions solved in last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentQuestions = await Question.countDocuments({
-      user: userId,
-      solvedDate: { $gte: thirtyDaysAgo }
-    });
-
-    res.json({
-      totalQuestions,
-      revisionCount,
-      recentQuestions,
-      topicStats,
-      difficultyStats,
-      platformStats
-    });
-  } catch (error) {
-    console.error('Get stats error:', error);
-    res.status(500).json({ message: 'Server error while fetching statistics' });
+    res.json({ books, chapters, total: questions.length, totalSolved });
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading meta', error: err.message });
   }
 });
 
-// @route   GET /api/questions/scheduled-revisions
-// @desc    Get questions due for scheduled revision
-// @access  Private
-router.get('/scheduled-revisions', auth, async (req, res) => {
+// GET /api/questions/stats
+router.get('/stats', (req, res) => {
   try {
-    const now = new Date();
-    
-    const questions = await Question.find({
-      user: req.user._id,
-      'revisionSchedule.enabled': true,
-      'revisionSchedule.nextRevisionDate': { $lte: now }
-    })
-    .sort({ 'revisionSchedule.nextRevisionDate': 1 })
-    .lean();
-
-    res.json({ questions });
-  } catch (error) {
-    console.error('Get scheduled revisions error:', error);
-    res.status(500).json({ message: 'Server error while fetching scheduled revisions' });
-  }
-});
-
-// @route   GET /api/questions/:id
-// @desc    Get a specific question
-// @access  Private
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const question = await Question.findOne({
-      _id: req.params.id,
-      user: req.user._id
-    });
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
+    const questions = getQuestions();
+    const stats = {};
+    for (const q of questions) {
+      const bKey = q.bookId || q.book;
+      if (!stats[bKey]) stats[bKey] = { total: 0, solved: 0, name: q.book };
+      stats[bKey].total++;
+      if (q.solved) stats[bKey].solved++;
     }
-
-    res.json({ question });
-  } catch (error) {
-    console.error('Get question error:', error);
-    res.status(500).json({ message: 'Server error while fetching question' });
-  }
-});
-
-// @route   PUT /api/questions/:id
-// @desc    Update a question
-// @access  Private
-router.put('/:id', [
-  auth,
-  body('title').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Title must be less than 200 characters'),
-  body('link').optional().isURL().withMessage('Please enter a valid URL'),
-  body('platform').optional().isIn(['LeetCode', 'Codeforces', 'GeeksforGeeks', 'HackerRank', 'CodeChef', 'AtCoder', 'Other']).withMessage('Invalid platform'),
-  body('topic').optional().isIn([
-    'Array', 'String', 'Hash Table', 'Dynamic Programming', 'Math', 'Sorting',
-    'Greedy', 'Depth-First Search', 'Breadth-First Search', 'Tree', 'Binary Search',
-    'Matrix', 'Two Pointers', 'Bit Manipulation', 'Stack', 'Heap', 'Graph',
-    'Design', 'Backtracking', 'Sliding Window', 'Union Find', 'Trie', 'Recursion',
-    'Binary Tree', 'Binary Search Tree', 'Linked List', 'Queue', 'Other'
-  ]).withMessage('Invalid topic'),
-  body('difficulty').optional().isIn(['Easy', 'Medium', 'Hard']).withMessage('Invalid difficulty'),
-  body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-  body('notes').optional().isLength({ max: 2000 }).withMessage('Notes must be less than 2000 characters'),
-  body('timeSpent').optional().isInt({ min: 0 }).withMessage('Time spent must be a positive number'),
-  body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
-  body('needsRevision').optional().isBoolean().withMessage('needsRevision must be a boolean')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: 'Validation failed', 
-        errors: errors.array() 
-      });
-    }
-
-    const question = await Question.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
-    }
-
-    res.json({
-      message: 'Question updated successfully',
-      question
-    });
-  } catch (error) {
-    console.error('Update question error:', error);
-    res.status(500).json({ message: 'Server error while updating question' });
-  }
-});
-
-// @route   DELETE /api/questions/:id
-// @desc    Delete a question
-// @access  Private
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const question = await Question.findOneAndDelete({
-      _id: req.params.id,
-      user: req.user._id
-    });
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
-    }
-
-    res.json({ message: 'Question deleted successfully' });
-  } catch (error) {
-    console.error('Delete question error:', error);
-    res.status(500).json({ message: 'Server error while deleting question' });
-  }
-});
-
-// @route   PATCH /api/questions/:id/toggle-revision
-// @desc    Toggle revision status of a question
-// @access  Private
-router.patch('/:id/toggle-revision', auth, async (req, res) => {
-  try {
-    const { needsRevision } = req.body;
-    const question = await Question.findOne({ _id: req.params.id, user: req.user._id });
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
-    }
-
-    question.needsRevision = needsRevision;
-
-    // If marking as reviewed (not needing revision) and schedule is enabled, update next revision date
-    if (!needsRevision && question.revisionSchedule?.enabled) {
-      const now = new Date();
-      question.revisionSchedule.lastRevisedDate = now;
-      question.revisionSchedule.timesRevised = (question.revisionSchedule.timesRevised || 0) + 1;
-      
-      // Calculate next revision date
-      const nextDate = new Date(now);
-      nextDate.setDate(nextDate.getDate() + question.revisionSchedule.intervalDays);
-      question.revisionSchedule.nextRevisionDate = nextDate;
-    }
-
-    await question.save();
-
-    res.json({
-      message: 'Revision status updated successfully',
-      question
-    });
-  } catch (error) {
-    console.error('Toggle revision error:', error);
-    res.status(500).json({ message: 'Server error while updating revision status' });
-  }
-});
-
-// @route   PATCH /api/questions/:id/revision-schedule
-// @desc    Update revision schedule settings for a question
-// @access  Private
-router.patch('/:id/revision-schedule', [
-  auth,
-  body('enabled').optional().isBoolean().withMessage('enabled must be a boolean'),
-  body('intervalDays').optional().isInt({ min: 1, max: 365 }).withMessage('Interval must be between 1 and 365 days')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
-    }
-
-    const { enabled, intervalDays } = req.body;
-    const question = await Question.findOne({ _id: req.params.id, user: req.user._id });
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
-    }
-
-    // Initialize revisionSchedule if it doesn't exist
-    if (!question.revisionSchedule) {
-      question.revisionSchedule = {
-        enabled: false,
-        intervalDays: 3,
-        nextRevisionDate: null,
-        lastRevisedDate: null,
-        timesRevised: 0
-      };
-    }
-
-    if (typeof enabled === 'boolean') {
-      question.revisionSchedule.enabled = enabled;
-      
-      // If enabling, set the next revision date
-      if (enabled) {
-        const interval = intervalDays || question.revisionSchedule.intervalDays || 3;
-        const nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + interval);
-        question.revisionSchedule.nextRevisionDate = nextDate;
-        question.needsRevision = false; // Will show up when time comes
-      } else {
-        // If disabling, clear the next revision date
-        question.revisionSchedule.nextRevisionDate = null;
-      }
-    }
-
-    if (intervalDays) {
-      question.revisionSchedule.intervalDays = intervalDays;
-      
-      // Recalculate next revision date if enabled
-      if (question.revisionSchedule.enabled) {
-        const baseDate = question.revisionSchedule.lastRevisedDate || new Date();
-        const nextDate = new Date(baseDate);
-        nextDate.setDate(nextDate.getDate() + intervalDays);
-        question.revisionSchedule.nextRevisionDate = nextDate;
-      }
-    }
-
-    await question.save();
-
-    res.json({
-      message: 'Revision schedule updated successfully',
-      question
-    });
-  } catch (error) {
-    console.error('Update revision schedule error:', error);
-    res.status(500).json({ message: 'Server error while updating revision schedule' });
-  }
-});
-
-// @route   PATCH /api/questions/:id/solution
-// @desc    Save code solution for a question
-// @access  Private
-router.patch('/:id/solution', [
-  auth,
-  body('code')
-    .isString()
-    .withMessage('Code must be a string')
-    .isLength({ max: 50000 })
-    .withMessage('Code cannot be more than 50000 characters'),
-  body('language')
-    .isIn(['cpp', 'python', 'java', 'javascript'])
-    .withMessage('Invalid language')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: 'Validation failed', 
-        errors: errors.array() 
-      });
-    }
-
-    const { code, language } = req.body;
-
-    const question = await Question.findOne({
-      _id: req.params.id,
-      user: req.user._id
-    });
-
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
-    }
-
-    question.savedSolution = {
-      code,
-      language,
-      lastUpdated: new Date()
-    };
-
-    await question.save();
-
-    res.json({
-      message: 'Solution saved successfully',
-      question
-    });
-  } catch (error) {
-    console.error('Save solution error:', error);
-    res.status(500).json({ message: 'Server error while saving solution' });
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading stats', error: err.message });
   }
 });
 

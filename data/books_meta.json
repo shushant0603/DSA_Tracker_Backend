@@ -1,0 +1,874 @@
+[
+  {
+    "id": "book-1",
+    "name": "Book 1: Linear Foundations",
+    "shortTitle": "Linear Foundations",
+    "icon": "Layers",
+    "color": "from-blue-500 to-indigo-600",
+    "description": "Arrays, Strings, Hashing, Two Pointers, Sliding Window, Binary Search, Prefix Sum",
+    "totalQuestions": 976,
+    "solvedQuestions": 15,
+    "chaptersCount": 7,
+    "chapters": [
+      {
+        "name": "Arrays",
+        "total": 254,
+        "solved": 15,
+        "sections": [
+          "1.1 Basic Array Traversal & Manipulation",
+          "1.2 Array Search & Lookup",
+          "1.3 Array Sorting Problems",
+          "1.4 Subarray Problems (Contiguous)",
+          "1.5 Matrix / 2D Array Problems",
+          "1.6 Rotation & Reversal Problems",
+          "1.7 Simulation & Implementation",
+          "1.8 Intervals",
+          "1.9 Greedy on Arrays"
+        ]
+      },
+      {
+        "name": "Strings",
+        "total": 176,
+        "solved": 0,
+        "sections": [
+          "2.1 Basic String Operations",
+          "2.2 String Comparison & Validation",
+          "2.3 Substring Problems",
+          "2.4 String Transformation",
+          "2.5 Pattern Matching (KMP, Rabin-Karp, Z-Algorithm)",
+          "2.6 Lexicographical Problems",
+          "2.7 Edit Distance & String DP"
+        ]
+      },
+      {
+        "name": "Hashing",
+        "total": 114,
+        "solved": 0,
+        "sections": [
+          "3.1 Basic Hash Map / Set Operations",
+          "3.2 Frequency Counting",
+          "3.3 Prefix Hash / Subarray Sum with Hash",
+          "3.4 Hash + Geometric / Coordinate Problems",
+          "3.5 Design Problems with Hashing",
+          "3.6 String Hashing / Rolling Hash"
+        ]
+      },
+      {
+        "name": "Two Pointers",
+        "total": 73,
+        "solved": 0,
+        "sections": [
+          "4.1 Same Direction (Fast & Slow / Read-Write)",
+          "4.2 Opposite Direction (Shrinking Window)",
+          "4.3 Sorted Array Two Pointers",
+          "4.4 Partition / Dutch National Flag",
+          "4.5 Linked List Two Pointers"
+        ]
+      },
+      {
+        "name": "Sliding Window",
+        "total": 66,
+        "solved": 0,
+        "sections": [
+          "5.1 Fixed Size Window",
+          "5.2 Variable Size Window (Expand/Shrink)",
+          "5.3 Sliding Window with Data Structures",
+          "5.4 Two Pointer + Sliding Window Hybrids"
+        ]
+      },
+      {
+        "name": "Binary Search",
+        "total": 104,
+        "solved": 0,
+        "sections": [
+          "6.1 Classical Binary Search",
+          "6.2 Boundary Binary Search (First/Last Position)",
+          "6.3 Binary Search on Answer / Search Space",
+          "6.4 Rotated Sorted Array",
+          "6.5 Mountain / Bitonic Array",
+          "6.6 Matrix Binary Search",
+          "6.7 Binary Search + Greedy",
+          "6.8 Binary Search + Dynamic Programming",
+          "6.9 Advanced Binary Search"
+        ]
+      },
+      {
+        "name": "Prefix Sum / Difference Arrays / Math Patterns",
+        "total": 189,
+        "solved": 0,
+        "sections": [
+          "7.1 Basic Prefix Sum",
+          "7.2 Prefix Sum + Hash Map",
+          "7.3 Prefix XOR",
+          "7.4 Difference Arrays",
+          "7.5 2D Prefix Sum",
+          "7.6 Math Fundamentals",
+          "7.7 GCD / LCM",
+          "7.8 Prime Numbers / Factorization",
+          "7.9 Combinatorics",
+          "7.10 Bit Manipulation",
+          "7.11 Number Theory Problems",
+          "7.12 Modular Arithmetic"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-2",
+    "name": "Book 2: Linked Structures & Control Flow",
+    "shortTitle": "Linked & Control Flow",
+    "icon": "GitCommit",
+    "color": "from-emerald-500 to-teal-600",
+    "description": "Linked Lists, Stacks, Queues, Recursion, Backtracking",
+    "totalQuestions": 471,
+    "solvedQuestions": 0,
+    "chaptersCount": 5,
+    "chapters": [
+      {
+        "name": "Linked List",
+        "total": 84,
+        "solved": 0,
+        "sections": [
+          "1.1 Basic Linked List Operations",
+          "1.2 Two Pointers / Fast & Slow",
+          "1.3 Reversal Patterns",
+          "1.4 Merge & Sort Operations",
+          "1.5 Addition / Mathematical Operations",
+          "1.6 Copy & Clone Operations",
+          "1.7 Doubly Linked List",
+          "1.8 Swapping & Rearrangement",
+          "1.9 Linked List + Other Data Structures",
+          "1.10 Advanced Linked List Problems"
+        ]
+      },
+      {
+        "name": "Stack",
+        "total": 109,
+        "solved": 0,
+        "sections": [
+          "2.1 Basic Stack Operations",
+          "2.2 Parentheses / Bracket Matching",
+          "2.3 Monotonic Stack (Increasing/Decreasing)",
+          "2.4 Previous/Next Smaller/Greater Element",
+          "2.5 Expression Evaluation",
+          "2.6 Stack for Simulation / History",
+          "2.7 Stack + Greedy",
+          "2.8 Nested Structure Processing",
+          "2.9 Advanced Stack Problems"
+        ]
+      },
+      {
+        "name": "Queue / Deque",
+        "total": 77,
+        "solved": 0,
+        "sections": [
+          "3.1 Basic Queue Operations",
+          "3.2 Queue for BFS Simulation",
+          "3.3 Monotonic Deque / Sliding Window Maximum",
+          "3.4 Double-Ended Queue (Deque) Problems",
+          "3.5 Priority Queue as Special Queue",
+          "3.6 Task Scheduling with Queue",
+          "3.7 Queue for Stream Processing",
+          "3.8 Advanced Queue Problems"
+        ]
+      },
+      {
+        "name": "Recursion",
+        "total": 75,
+        "solved": 0,
+        "sections": [
+          "4.1 Basic Recursion",
+          "4.2 Recursion with Strings",
+          "4.3 Recursion with Linked Lists",
+          "4.4 Divide and Conquer",
+          "4.5 Recursion with Memoization",
+          "4.6 Mathematical Recursion",
+          "4.7 Generate All Structures"
+        ]
+      },
+      {
+        "name": "Backtracking",
+        "total": 126,
+        "solved": 0,
+        "sections": [
+          "5.1 Subsets Pattern",
+          "5.2 Combinations Pattern",
+          "5.3 Permutations Pattern",
+          "5.4 Palindrome Partitioning",
+          "5.5 Grid / Matrix Backtracking",
+          "5.6 Expression & Operator Problems",
+          "5.7 Path Finding with Backtracking",
+          "5.8 Word Problems / Dictionary",
+          "5.9 Game Theory / Minimax",
+          "5.10 Scheduling / Assignment Problems",
+          "5.11 Advanced Backtracking"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-3",
+    "name": "Book 3: Hierarchical Data Structures",
+    "shortTitle": "Trees & Heaps",
+    "icon": "GitFork",
+    "color": "from-amber-500 to-orange-600",
+    "description": "Binary Trees, BST, Heap / Priority Queues, Tries",
+    "totalQuestions": 352,
+    "solvedQuestions": 0,
+    "chaptersCount": 4,
+    "chapters": [
+      {
+        "name": "Binary Tree",
+        "total": 148,
+        "solved": 0,
+        "sections": [
+          "1.1 Tree Traversal - Preorder, Inorder, Postorder",
+          "1.2 Level Order Traversal (BFS)",
+          "1.3 Tree Depth Problems",
+          "1.4 Path Problems",
+          "1.5 Tree Structure & Properties",
+          "1.6 Lowest Common Ancestor (LCA)",
+          "1.7 Tree Construction & Serialization",
+          "1.8 Tree Modification",
+          "1.9 N-ary Tree",
+          "1.10 Binary Tree Counting & Enumeration",
+          "1.11 Vertical & Boundary Traversal",
+          "1.12 Tree with Additional Constraints",
+          "1.13 Advanced Binary Tree Problems"
+        ]
+      },
+      {
+        "name": "Binary Search Tree (BST)",
+        "total": 50,
+        "solved": 0,
+        "sections": [
+          "2.1 BST Basics & Validation",
+          "2.2 BST Construction",
+          "2.3 BST Traversal & Iterator",
+          "2.4 Kth Element in BST",
+          "2.5 BST with Two Pointers / Two Sum",
+          "2.6 LCA in BST",
+          "2.7 BST Modification & Recovery",
+          "2.8 Advanced BST Problems",
+          "2.9 Balanced BST / AVL / Self-Balancing"
+        ]
+      },
+      {
+        "name": "Heap / Priority Queue",
+        "total": 102,
+        "solved": 0,
+        "sections": [
+          "3.1 Basic Heap Operations",
+          "3.2 Kth Largest / Smallest Element",
+          "3.3 Merge K Sorted Structures",
+          "3.4 Median Finding",
+          "3.5 Task Scheduling with Heap",
+          "3.6 Greedy with Heap",
+          "3.7 Simulation with Heap",
+          "3.8 Two Heaps Pattern",
+          "3.9 Dijkstra / Shortest Path with Heap",
+          "3.10 Design with Heap",
+          "3.11 Advanced Heap Problems"
+        ]
+      },
+      {
+        "name": "Trie (Prefix Tree)",
+        "total": 52,
+        "solved": 0,
+        "sections": [
+          "4.1 Basic Trie Operations",
+          "4.2 Word Search with Trie",
+          "4.3 Autocomplete / Prefix Matching",
+          "4.4 XOR Trie (Bitwise Trie)",
+          "4.5 Word Dictionary Problems",
+          "4.6 Palindrome with Trie",
+          "4.7 Counting / Sum with Trie",
+          "4.8 Advanced Trie Problems"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-4",
+    "name": "Book 4: Graph Algorithms",
+    "shortTitle": "Graph Algorithms",
+    "icon": "Share2",
+    "color": "from-rose-500 to-pink-600",
+    "description": "Graph BFS/DFS, Topo Sort, Shortest Path (Dijkstra/Bellman), MST, DSU",
+    "totalQuestions": 349,
+    "solvedQuestions": 0,
+    "chaptersCount": 6,
+    "chapters": [
+      {
+        "name": "Graph Basics",
+        "total": 32,
+        "solved": 0,
+        "sections": [
+          "1.1 Graph Representation & Traversal Basics",
+          "1.2 Clone / Copy Graph",
+          "1.3 Graph Coloring / Bipartite",
+          "1.4 Degree & Connectivity",
+          "1.5 Eulerian Path / Circuit",
+          "1.6 Hamiltonian Path"
+        ]
+      },
+      {
+        "name": "BFS / DFS",
+        "total": 114,
+        "solved": 0,
+        "sections": [
+          "2.1 Grid DFS - Flood Fill / Connected Components",
+          "2.2 Grid BFS - Shortest Path in Grid",
+          "2.3 Multi-Source BFS",
+          "2.4 Graph BFS - Level Order / Shortest Path",
+          "2.5 Graph DFS - Path Finding",
+          "2.6 Cycle Detection",
+          "2.7 Connected Components",
+          "2.8 BFS with State",
+          "2.9 Bidirectional BFS",
+          "2.10 Advanced BFS/DFS Problems"
+        ]
+      },
+      {
+        "name": "Topological Sort",
+        "total": 43,
+        "solved": 0,
+        "sections": [
+          "3.1 Course Schedule Pattern",
+          "3.2 Task Ordering / Dependency Resolution",
+          "3.3 Kahn's Algorithm (BFS-based)",
+          "3.4 DFS-based Topological Sort",
+          "3.5 Lexicographically Smallest Topological Order",
+          "3.6 DAG Longest/Shortest Path",
+          "3.7 Advanced Topological Sort"
+        ]
+      },
+      {
+        "name": "Shortest Path Algorithms",
+        "total": 71,
+        "solved": 0,
+        "sections": [
+          "4.1 Unweighted Graph BFS (Unit Weight)",
+          "4.2 Dijkstra's Algorithm",
+          "4.3 Bellman-Ford Algorithm",
+          "4.4 Floyd-Warshall Algorithm",
+          "4.5 0-1 BFS (Deque BFS)",
+          "4.6 Shortest Path with Constraints",
+          "4.7 Multi-Source / Multi-Destination Shortest Path",
+          "4.8 Shortest Path in DAG",
+          "4.9 A* Search / Heuristic Search",
+          "4.10 Advanced Shortest Path Problems"
+        ]
+      },
+      {
+        "name": "Disjoint Set Union (Union-Find)",
+        "total": 63,
+        "solved": 0,
+        "sections": [
+          "5.1 Basic Union-Find Operations",
+          "5.2 Connected Components with Union-Find",
+          "5.3 Cycle Detection with Union-Find",
+          "5.4 Dynamic Connectivity",
+          "5.5 Union-Find with Ranking / Weighting",
+          "5.6 Grid Union-Find Problems",
+          "5.7 String / Word Problems with Union-Find",
+          "5.8 Advanced Union-Find Problems"
+        ]
+      },
+      {
+        "name": "Minimum Spanning Tree (MST)",
+        "total": 26,
+        "solved": 0,
+        "sections": [
+          "6.1 Kruskal's Algorithm",
+          "6.2 Prim's Algorithm",
+          "6.3 MST Variants / Applications",
+          "6.4 Maximum Spanning Tree",
+          "6.5 Advanced MST Problems"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-5",
+    "name": "Book 5: Dynamic Programming",
+    "shortTitle": "Dynamic Programming",
+    "icon": "Cpu",
+    "color": "from-purple-500 to-violet-600",
+    "description": "1D DP, 2D Grid DP, Knapsack, LIS, LCS, Tree DP, Graph DP",
+    "totalQuestions": 481,
+    "solvedQuestions": 0,
+    "chaptersCount": 7,
+    "chapters": [
+      {
+        "name": "DP Foundations",
+        "total": 32,
+        "solved": 0,
+        "sections": [
+          "1.1 Basic Recursion to DP (Fibonacci Pattern)",
+          "1.2 Counting Problems",
+          "1.3 Min/Max Optimization",
+          "1.4 Decision Making DP"
+        ]
+      },
+      {
+        "name": "1D Dynamic Programming",
+        "total": 81,
+        "solved": 0,
+        "sections": [
+          "2.1 Linear DP",
+          "2.2 Jump Game Pattern",
+          "2.3 Stock Trading DP",
+          "2.4 Subarray DP",
+          "2.5 Partitioning DP",
+          "2.6 Coin Change Pattern",
+          "2.7 State Machine DP",
+          "2.8 Counting Subsequences",
+          "2.9 Arithmetic Progression DP",
+          "2.10 Advanced 1D DP"
+        ]
+      },
+      {
+        "name": "2D / Grid Dynamic Programming",
+        "total": 136,
+        "solved": 0,
+        "sections": [
+          "3.1 Grid Path DP",
+          "3.2 Grid Counting DP",
+          "3.3 Square / Rectangle DP",
+          "3.4 Matrix Chain Multiplication Pattern",
+          "3.5 Interval DP",
+          "3.6 Game Theory DP (2 Player)",
+          "3.7 Two Sequence DP",
+          "3.8 Digit DP",
+          "3.9 Bitmask DP",
+          "3.10 Advanced 2D DP"
+        ]
+      },
+      {
+        "name": "Knapsack Patterns",
+        "total": 44,
+        "solved": 0,
+        "sections": [
+          "4.1 0/1 Knapsack",
+          "4.2 Unbounded Knapsack",
+          "4.3 Bounded Knapsack",
+          "4.4 Subset Sum Problems",
+          "4.5 Multiple Constraint Knapsack",
+          "4.6 Advanced Knapsack"
+        ]
+      },
+      {
+        "name": "LIS / LCS Patterns",
+        "total": 50,
+        "solved": 0,
+        "sections": [
+          "5.1 Longest Increasing Subsequence (LIS)",
+          "5.2 Longest Common Subsequence (LCS)",
+          "5.3 Edit Distance Pattern",
+          "5.4 Longest Palindromic Subsequence",
+          "5.5 String Matching DP",
+          "5.6 Chain Problems (LIS Variants)",
+          "5.7 Advanced LIS/LCS"
+        ]
+      },
+      {
+        "name": "DP on Trees",
+        "total": 47,
+        "solved": 0,
+        "sections": [
+          "6.1 Tree Path DP",
+          "6.2 Tree Structure DP (Counting)",
+          "6.3 House Robber on Trees",
+          "6.4 Tree Rerooting DP",
+          "6.5 Tree Subtree DP",
+          "6.6 Tree Selection DP",
+          "6.7 General Tree DP",
+          "6.8 Advanced Tree DP"
+        ]
+      },
+      {
+        "name": "DP on Graphs (DAG DP)",
+        "total": 91,
+        "solved": 0,
+        "sections": [
+          "7.1 Topological Sort DP",
+          "7.2 Shortest Path DP",
+          "7.3 Counting Paths in DAG",
+          "7.4 Grid as DAG",
+          "7.5 State Space Graph DP",
+          "7.6 Job Scheduling DP",
+          "7.7 Advanced Graph DP",
+          "Easy Problems",
+          "Medium Problems",
+          "Hard Problems"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "essential-150",
+    "name": "Essential 150: Placement Sheet",
+    "shortTitle": "Essential 150",
+    "icon": "Target",
+    "color": "from-red-500 to-amber-600",
+    "description": "Curated 150 high-frequency placement interview questions",
+    "totalQuestions": 157,
+    "solvedQuestions": 0,
+    "chaptersCount": 1,
+    "chapters": [
+      {
+        "name": "General",
+        "total": 157,
+        "solved": 0,
+        "sections": [
+          "Must-Do",
+          "Array Manipulation",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "Traversal & Basics",
+          "Tree Properties",
+          "Path Problems",
+          "BST",
+          "Construction",
+          "1",
+          "BFS/DFS Basics",
+          "Graph Traversal",
+          "Shortest Path",
+          "Union Find",
+          "1D DP",
+          "2D DP",
+          "Knapsack",
+          "Interval DP"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "binary-search",
+    "name": "Binary Search Complete Guide",
+    "shortTitle": "Binary Search Master",
+    "icon": "Search",
+    "color": "from-cyan-500 to-blue-600",
+    "description": "Exhaustive compendium of 300+ Binary Search patterns & variations",
+    "totalQuestions": 625,
+    "solvedQuestions": 7,
+    "chaptersCount": 38,
+    "chapters": [
+      {
+        "name": "Basic Binary Search (Exact Match)",
+        "total": 8,
+        "solved": 4,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search in Rotated Sorted Arrays",
+        "total": 8,
+        "solved": 3,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search in 2D Matrix",
+        "total": 12,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Mountain Array Problems",
+        "total": 4,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Infinite / Unknown Size Arrays",
+        "total": 3,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search on Characters / Strings",
+        "total": 7,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "First Occurrence / Lower Bound",
+        "total": 5,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Last Occurrence / Upper Bound",
+        "total": 5,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Insert Position Problems",
+        "total": 8,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Peak Element Problems",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Finding Minimum / Maximum",
+        "total": 4,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Capacity / Load Problems",
+        "total": 11,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Allocation / Distribution Problems",
+        "total": 5,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Speed / Rate Problems",
+        "total": 3,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Days / Time Problems",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Maximize Minimum Problems",
+        "total": 3,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Minimize Maximum Problems",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Partition Problems",
+        "total": 6,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Prefix Sums",
+        "total": 8,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Two Pointers",
+        "total": 6,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Sliding Window",
+        "total": 9,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Greedy",
+        "total": 4,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Dynamic Programming",
+        "total": 11,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Binary Indexed Tree / Segment Tree",
+        "total": 7,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search on Graphs / Trees",
+        "total": 8,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Sorting",
+        "total": 8,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Bit Manipulation",
+        "total": 4,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Kth Element Problems",
+        "total": 5,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Count-Based Binary Search",
+        "total": 3,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search in Strings",
+        "total": 2,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search Design Problems",
+        "total": 2,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Median Finding Problems",
+        "total": 2,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Floating Point Binary Search",
+        "total": 2,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search on Answer with Math",
+        "total": 3,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Interactive Binary Search Problems",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Binary Search with Monotonic Stack / Queue",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Scheduling Problems with Binary Search",
+        "total": 1,
+        "solved": 0,
+        "sections": [
+          "General"
+        ]
+      },
+      {
+        "name": "Additional Binary Search Problems",
+        "total": 443,
+        "solved": 0,
+        "sections": [
+          "General",
+          "Problems Sorted by LeetCode Number",
+          "Easy Problems",
+          "Medium Problems",
+          "Hard Problems"
+        ]
+      }
+    ]
+  }
+]
