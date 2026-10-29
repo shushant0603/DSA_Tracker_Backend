@@ -21,6 +21,7 @@ const configuredOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URLS,
   process.env.CLIENT_URL,
+  process.env.FRONTEND_ORIGIN,
 ]
   .filter(Boolean)
   .flatMap((value) => value.split(','))
@@ -31,6 +32,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       ...configuredOrigins,
+      'https://dsa.shushantku.me',
       'https://dsa-tracker-frontend-6lun.onrender.com',
       'http://localhost:5173',
     'https://dsa-tracker-frontend-tau.vercel.app',
