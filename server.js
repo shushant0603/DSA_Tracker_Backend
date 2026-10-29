@@ -17,18 +17,29 @@ const app = express();
 connectDB();
 
 // CORS Configuration
+const configuredOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URLS,
+  process.env.CLIENT_URL,
+]
+  .filter(Boolean)
+  .flatMap((value) => value.split(','))
+  .map((value) => value.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
+      ...configuredOrigins,
       'https://dsa-tracker-frontend-6lun.onrender.com',
       'http://localhost:5173',
       'https://dsa-tracker-frontend-one.vercel.app'
-    ];
+    ].filter((value, index, origins) => origins.indexOf(value) === index);
     
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin.replace(/\/$/, ''))) {
       callback(null, true);
     } else {
       console.log('Blocked by CORS:', origin);
