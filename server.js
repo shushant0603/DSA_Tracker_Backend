@@ -33,7 +33,8 @@ const corsOptions = {
       ...configuredOrigins,
       'https://dsa-tracker-frontend-6lun.onrender.com',
       'http://localhost:5173',
-    'https://dsa-tracker-frontend-tau.vercel.app'
+    'https://dsa-tracker-frontend-tau.vercel.app',
+    'https://dsa.shushantku.me'
     ].filter((value, index, origins) => origins.indexOf(value) === index);
     
     // Allow requests with no origin (like mobile apps or curl requests)
