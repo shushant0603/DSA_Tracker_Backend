@@ -6,6 +6,89 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+const githubRequestConfig = {
+  headers: {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'DSA-Tracker'
+  }
+};
+
+if (process.env.GITHUB_TOKEN) {
+  githubRequestConfig.headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+}
+
+const getLeetCodeProfile = async (username) => {
+  const response = await axios.post('https://leetcode.com/graphql', {
+    query: `
+      query userPublicProfile($username: String!) {
+        matchedUser(username: $username) {
+          username
+          submitStats {
+            acSubmissionNum {
+              difficulty
+              count
+            }
+          }
+        }
+      }
+    `,
+    variables: { username }
+  }, {
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  return response.data?.data?.matchedUser || null;
+};
+
+const validatePlatformUsernames = async ({ github, leetcode, codeforces }) => {
+  const validationResults = {};
+
+  if (github) {
+    try {
+      await axios.get(
+        `https://api.github.com/users/${encodeURIComponent(github)}`,
+        githubRequestConfig
+      );
+      validationResults.github = { valid: true };
+    } catch (err) {
+      if (err.response?.status === 404) {
+        validationResults.github = { valid: false, error: 'GitHub username not found' };
+      } else {
+        console.error('GitHub validation unavailable:', err.response?.data?.message || err.message);
+        validationResults.github = {
+          valid: true,
+          warning: 'GitHub validation is temporarily unavailable; stats may load after the rate limit resets'
+        };
+      }
+    }
+  }
+
+  if (leetcode) {
+    try {
+      validationResults.leetcode = await getLeetCodeProfile(leetcode)
+        ? { valid: true }
+        : { valid: false, error: 'LeetCode username not found' };
+    } catch (err) {
+      validationResults.leetcode = { valid: false, error: 'LeetCode username not found' };
+    }
+  }
+
+  if (codeforces) {
+    try {
+      const response = await axios.get(
+        `https://codeforces.com/api/user.info?handles=${encodeURIComponent(codeforces)}`
+      );
+      validationResults.codeforces = response.data.status === 'OK'
+        ? { valid: true }
+        : { valid: false, error: 'Codeforces username not found' };
+    } catch (err) {
+      validationResults.codeforces = { valid: false, error: 'Codeforces username not found' };
+    }
+  }
+
+  return validationResults;
+};
+
 // @route   GET /api/user/profile
 // @desc    Get user profile
 // @access  Private
@@ -63,43 +146,7 @@ router.post('/platform-usernames', [
       });
     }
 
-    // Validate usernames by making API calls
-    const validationResults = {};
-
-    if (github) {
-      try {
-        await axios.get(`https://api.github.com/users/${github}`);
-        validationResults.github = { valid: true };
-      } catch (err) {
-        validationResults.github = { valid: false, error: 'GitHub username not found' };
-      }
-    }
-
-    if (leetcode) {
-      try {
-        const lcResponse = await axios.get(`https://leetcode-stats-api.herokuapp.com/${leetcode}`);
-        if (lcResponse.data.status === 'success') {
-          validationResults.leetcode = { valid: true };
-        } else {
-          validationResults.leetcode = { valid: false, error: 'LeetCode username not found' };
-        }
-      } catch (err) {
-        validationResults.leetcode = { valid: false, error: 'LeetCode username not found' };
-      }
-    }
-
-    if (codeforces) {
-      try {
-        const cfResponse = await axios.get(`https://codeforces.com/api/user.info?handles=${codeforces}`);
-        if (cfResponse.data.status === 'OK') {
-          validationResults.codeforces = { valid: true };
-        } else {
-          validationResults.codeforces = { valid: false, error: 'Codeforces username not found' };
-        }
-      } catch (err) {
-        validationResults.codeforces = { valid: false, error: 'Codeforces username not found' };
-      }
-    }
+    const validationResults = await validatePlatformUsernames({ github, leetcode, codeforces });
 
     // Check if any validation failed
     const hasInvalid = Object.values(validationResults).some(v => !v.valid);
@@ -155,13 +202,28 @@ router.put('/platform-usernames', [
 
     const { github, leetcode, codeforces } = req.body;
 
+    const platformUsernames = {
+      github: github !== undefined ? github : req.user.platformUsernames?.github || null,
+      leetcode: leetcode !== undefined ? leetcode : req.user.platformUsernames?.leetcode || null,
+      codeforces: codeforces !== undefined ? codeforces : req.user.platformUsernames?.codeforces || null
+    };
+
+    if (!platformUsernames.github && !platformUsernames.leetcode && !platformUsernames.codeforces) {
+      return res.status(400).json({
+        message: 'At least one platform username is required'
+      });
+    }
+
+    const validationResults = await validatePlatformUsernames(platformUsernames);
+    if (Object.values(validationResults).some((result) => !result.valid)) {
+      return res.status(400).json({
+        message: 'Some usernames are invalid',
+        validationResults
+      });
+    }
+
     const updateData = {
-      platformUsernames: {
-        ...req.user.platformUsernames,
-        ...(github !== undefined && { github: github || null }),
-        ...(leetcode !== undefined && { leetcode: leetcode || null }),
-        ...(codeforces !== undefined && { codeforces: codeforces || null })
-      },
+      platformUsernames,
       hasPlatformData: true
     };
 
@@ -194,8 +256,14 @@ router.get('/platform-stats', auth, async (req, res) => {
     if (platformUsernames?.github) {
       try {
         const [userResponse, reposResponse] = await Promise.all([
-          axios.get(`https://api.github.com/users/${platformUsernames.github}`),
-          axios.get(`https://api.github.com/users/${platformUsernames.github}/repos?per_page=100`)
+          axios.get(
+            `https://api.github.com/users/${encodeURIComponent(platformUsernames.github)}`,
+            githubRequestConfig
+          ),
+          axios.get(
+            `https://api.github.com/users/${encodeURIComponent(platformUsernames.github)}/repos?per_page=100`,
+            githubRequestConfig
+          )
         ]);
 
         const repos = reposResponse.data;
@@ -223,20 +291,17 @@ router.get('/platform-stats', auth, async (req, res) => {
     // Fetch LeetCode stats
     if (platformUsernames?.leetcode) {
       try {
-        const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${platformUsernames.leetcode}`);
-        if (response.data.status === 'success') {
+        const profile = await getLeetCodeProfile(platformUsernames.leetcode);
+        if (profile) {
+          const solved = Object.fromEntries(
+            profile.submitStats.acSubmissionNum.map(({ difficulty, count }) => [difficulty, count])
+          );
           stats.leetcode = {
-            username: platformUsernames.leetcode,
-            totalSolved: response.data.totalSolved,
-            totalQuestions: response.data.totalQuestions,
-            easySolved: response.data.easySolved,
-            easyTotal: response.data.totalEasy,
-            mediumSolved: response.data.mediumSolved,
-            mediumTotal: response.data.totalMedium,
-            hardSolved: response.data.hardSolved,
-            hardTotal: response.data.totalHard,
-            acceptanceRate: response.data.acceptanceRate,
-            ranking: response.data.ranking
+            username: profile.username,
+            totalSolved: solved.All || 0,
+            easySolved: solved.Easy || 0,
+            mediumSolved: solved.Medium || 0,
+            hardSolved: solved.Hard || 0
           };
         } else {
           stats.leetcode = { error: 'LeetCode user not found' };
@@ -249,7 +314,9 @@ router.get('/platform-stats', auth, async (req, res) => {
     // Fetch Codeforces stats
     if (platformUsernames?.codeforces) {
       try {
-        const response = await axios.get(`https://codeforces.com/api/user.info?handles=${platformUsernames.codeforces}`);
+        const response = await axios.get(
+          `https://codeforces.com/api/user.info?handles=${encodeURIComponent(platformUsernames.codeforces)}`
+        );
         if (response.data.status === 'OK') {
           const user = response.data.result[0];
           stats.codeforces = {

@@ -71,7 +71,9 @@ router.post('/register', [
         id: user._id,
         name: user.name,
         email: user.email,
-        preferences: user.preferences
+        preferences: user.preferences,
+        platformUsernames: user.platformUsernames,
+        hasPlatformData: user.hasPlatformData
       }
     });
   } catch (error) {
@@ -137,7 +139,9 @@ router.post('/verify-otp', [
         id: user._id,
         name: user.name,
         email: user.email,
-        preferences: user.preferences
+        preferences: user.preferences,
+        platformUsernames: user.platformUsernames,
+        hasPlatformData: user.hasPlatformData
       }
     });
   } catch (error) {
@@ -254,7 +258,9 @@ router.post('/login', [
         id: user._id,
         name: user.name,
         email: user.email,
-        preferences: user.preferences
+        preferences: user.preferences,
+        platformUsernames: user.platformUsernames,
+        hasPlatformData: user.hasPlatformData
       }
     });
   } catch (error) {
@@ -273,7 +279,9 @@ router.get('/me', auth, async (req, res) => {
         id: req.user._id,
         name: req.user.name,
         email: req.user.email,
-        preferences: req.user.preferences
+        preferences: req.user.preferences,
+        platformUsernames: req.user.platformUsernames,
+        hasPlatformData: req.user.hasPlatformData
       }
     });
   } catch (error) {

@@ -9,18 +9,40 @@ router.get("/:username", async (req, res) => {
   console.log("LeetCode username:", username);
 
   try {
-    const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${username}`);
+    const response = await axios.post("https://leetcode.com/graphql", {
+      query: `
+        query userPublicProfile($username: String!) {
+          matchedUser(username: $username) {
+            username
+            submitStats {
+              acSubmissionNum {
+                difficulty
+                count
+              }
+            }
+          }
+        }
+      `,
+      variables: { username }
+    }, {
+      headers: { "Content-Type": "application/json" }
+    });
+    const profile = response.data?.data?.matchedUser;
 
-    if (response.data.status !== "success") {
+    if (!profile) {
       return res.status(404).json({ message: "User not found on LeetCode" });
     }
 
-    const { easySolved, mediumSolved, hardSolved } = response.data;
+    const solved = Object.fromEntries(
+      profile.submitStats.acSubmissionNum.map(({ difficulty, count }) => [difficulty, count])
+    );
 
     res.json({
-      Easy: easySolved,
-      Medium: mediumSolved,
-      Hard: hardSolved,
+      username: profile.username,
+      Easy: solved.Easy || 0,
+      Medium: solved.Medium || 0,
+      Hard: solved.Hard || 0,
+      totalSolved: solved.All || 0
     });
   } catch (error) {
     console.error("❌ LeetCode API Error:", error.message);

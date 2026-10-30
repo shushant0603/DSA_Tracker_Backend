@@ -60,7 +60,7 @@
     "section": "1.1 Basic Array Traversal & Manipulation",
     "solved": true,
     "status": "solved",
-    "note": "space complexity issue",
+    "note": "",
     "leetcodeUrl": "https://leetcode.com/problems/shuffle-the-array/",
     "_serial": 5
   },
@@ -86,7 +86,7 @@
     "section": "1.1 Basic Array Traversal & Manipulation",
     "solved": true,
     "status": "revision",
-    "note": "need revision.",
+    "note": "",
     "leetcodeUrl": "https://leetcode.com/problems/number-of-good-pairs/",
     "_serial": 7
   },
@@ -99,7 +99,7 @@
     "section": "1.1 Basic Array Traversal & Manipulation",
     "solved": true,
     "status": "revision",
-    "note": "need revision",
+    "note": "",
     "leetcodeUrl": "https://leetcode.com/problems/count-items-matching-a-rule/",
     "_serial": 8
   },
@@ -515,7 +515,7 @@
     "section": "1.2 Array Search & Lookup",
     "solved": true,
     "status": "revision",
-    "note": "need revision",
+    "note": "",
     "leetcodeUrl": "https://leetcode.com/problems/search-insert-position/",
     "_serial": 40
   },

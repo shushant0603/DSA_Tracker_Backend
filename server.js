@@ -36,7 +36,7 @@ const corsOptions = {
       'https://dsa-tracker-frontend-6lun.onrender.com',
       'http://localhost:5173',
     'https://dsa-tracker-frontend-tau.vercel.app',
-    'https://dsa.shushantku.me'
+    
     ].filter((value, index, origins) => origins.indexOf(value) === index);
     
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -70,6 +70,7 @@ app.use('/api/questions', require('./routes/questions'));
 app.use('/api/user', require('./routes/user'));
 app.use("/api/leetcode",Leetcode);
 app.use("/api/codeforce",require('./routes/codeforces'));
+app.use('/api/revision', require('./routes/revision'));
 
 //start version2 
 
