@@ -1,6 +1,26 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const solvedQuestionSchema = new mongoose.Schema({
+  questionKey: { type: String, required: true, trim: true },
+  bookId: { type: String, required: true, trim: true },
+  serial: { type: Number, required: true },
+  questionId: { type: mongoose.Schema.Types.Mixed, default: null },
+  title: { type: String, required: true, trim: true },
+  url: { type: String, default: null },
+  difficulty: { type: String, default: null },
+  chapter: { type: String, default: '' },
+  section: { type: String, default: '' },
+  note: { type: String, default: '' },
+  solvedAt: { type: Date, required: true, default: Date.now },
+  solvedDate: { type: String, required: true },
+  dayOfWeek: {
+    type: String,
+    required: true,
+    enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -15,9 +35,20 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
+  picture: {
+    type: String,
+    default: null
+  },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function() {
+      return !this.googleId;
+    },
     minlength: [6, 'Password must be at least 6 characters']
   },
   // Email verification fields
@@ -65,14 +96,20 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     }
+  },
+  solvedQuestions: {
+    type: [solvedQuestionSchema],
+    default: []
   }
 }, {
   timestamps: true
 });
 
+userSchema.index({ 'solvedQuestions.questionKey': 1 });
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);

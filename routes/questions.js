@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -98,6 +99,25 @@ router.get('/book/:bookId', (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Error loading book data', error: err.message });
+  }
+});
+
+// GET /api/questions/problem-of-the-day?date=YYYY-MM-DD
+// Picks one deterministic random question for each local calendar date.
+router.get('/problem-of-the-day', (req, res) => {
+  try {
+    const requestedDate = String(req.query.date || '');
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)
+      ? requestedDate
+      : new Date().toISOString().slice(0, 10);
+    const eligibleQuestions = getQuestions().filter((question) => question.leetcodeUrl || question.link);
+    if (!eligibleQuestions.length) return res.status(404).json({ message: 'No questions available' });
+
+    const hash = crypto.createHash('sha256').update(date).digest();
+    const index = hash.readUInt32BE(0) % eligibleQuestions.length;
+    res.json({ date, question: eligibleQuestions[index] });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load problem of the day' });
   }
 });
 

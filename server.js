@@ -71,6 +71,7 @@ app.use('/api/user', require('./routes/user'));
 app.use("/api/leetcode",Leetcode);
 app.use("/api/codeforce",require('./routes/codeforces'));
 app.use('/api/revision', require('./routes/revision'));
+app.use('/api/notes', require('./routes/notes'));
 
 //start version2 
 

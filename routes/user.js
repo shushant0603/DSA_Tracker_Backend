@@ -102,12 +102,100 @@ router.get('/profile', auth, async (req, res) => {
         preferences: req.user.preferences,
         platformUsernames: req.user.platformUsernames,
         hasPlatformData: req.user.hasPlatformData,
+        solvedQuestionsCount: req.user.solvedQuestions?.length || 0,
         createdAt: req.user.createdAt
       }
     });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ message: 'Server error while fetching profile' });
+  }
+});
+
+// @route   GET /api/user/solved-questions
+// @desc    List a user's solved question references and counts by solve date
+// @access  Private
+router.get('/solved-questions', auth, (req, res) => {
+  const solvedQuestions = [...(req.user.solvedQuestions || [])]
+    .sort((left, right) => new Date(right.solvedAt) - new Date(left.solvedAt));
+  const byDay = solvedQuestions.reduce((groups, item) => {
+    const date = item.solvedDate;
+    groups[date] = (groups[date] || 0) + 1;
+    return groups;
+  }, {});
+
+  res.json({ total: solvedQuestions.length, byDay, solvedQuestions });
+});
+
+// @route   POST /api/user/solved-questions
+// @desc    Save or refresh a solved question reference on the authenticated user
+// @access  Private
+router.post('/solved-questions', auth, async (req, res) => {
+  try {
+    const bookId = String(req.body.bookId || '').trim();
+    const serial = Number(req.body.serial);
+    const questionId = req.body.questionId ?? null;
+    const questionKey = String(req.body.questionKey || (bookId && (questionId ?? serial) ? `${bookId}-${questionId ?? serial}` : '')).trim();
+    const title = String(req.body.title || '').trim();
+    const invalidFields = [];
+    if (!questionKey || questionKey.length > 120) invalidFields.push('questionKey');
+    if (!bookId || bookId.length > 120) invalidFields.push('bookId');
+    if (!Number.isInteger(serial) || serial < 1) invalidFields.push('serial');
+    if (!title || title.length > 200) invalidFields.push('title');
+    if (invalidFields.length) {
+      return res.status(400).json({ message: `Invalid solved question: ${invalidFields.join(', ')}`, invalidFields });
+    }
+
+    const solvedAt = new Date();
+    const solvedDate = req.body.solvedDate || solvedAt.toISOString().slice(0, 10);
+    const dayOfWeek = req.body.dayOfWeek || solvedAt.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    const user = await User.findById(req.user._id);
+    const existingIndex = user.solvedQuestions.findIndex((item) =>
+      item.questionKey === questionKey || (item.bookId === bookId && item.serial === serial)
+    );
+    const record = {
+      questionKey,
+      bookId,
+      serial,
+      questionId,
+      title,
+      url: typeof req.body.url === 'string' ? req.body.url : null,
+      difficulty: typeof req.body.difficulty === 'string' ? req.body.difficulty : null,
+      chapter: typeof req.body.chapter === 'string' ? req.body.chapter.slice(0, 200) : '',
+      section: typeof req.body.section === 'string' ? req.body.section.slice(0, 200) : '',
+      note: typeof req.body.note === 'string' ? req.body.note.slice(0, 1000) : '',
+      solvedAt: existingIndex >= 0 ? user.solvedQuestions[existingIndex].solvedAt : solvedAt,
+      solvedDate: existingIndex >= 0 ? user.solvedQuestions[existingIndex].solvedDate : /^\d{4}-\d{2}-\d{2}$/.test(solvedDate) ? solvedDate : solvedAt.toISOString().slice(0, 10),
+      dayOfWeek: existingIndex >= 0 ? user.solvedQuestions[existingIndex].dayOfWeek : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].includes(dayOfWeek) ? dayOfWeek : solvedAt.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+    };
+
+    if (existingIndex >= 0) user.solvedQuestions[existingIndex].set(record);
+    else user.solvedQuestions.push(record);
+    await user.save();
+
+    const saved = user.solvedQuestions.find((item) => item.questionKey === questionKey);
+    res.status(existingIndex >= 0 ? 200 : 201).json({
+      solvedQuestion: saved,
+      total: user.solvedQuestions.length
+    });
+  } catch (error) {
+    console.error('Save solved question error:', error);
+    res.status(500).json({ message: 'Unable to save solved question' });
+  }
+});
+
+// @route   DELETE /api/user/solved-questions/:questionKey
+// @desc    Remove a solved question reference from the authenticated user
+// @access  Private
+router.delete('/solved-questions/:questionKey', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.solvedQuestions = user.solvedQuestions.filter((item) => item.questionKey !== req.params.questionKey);
+    await user.save();
+    res.json({ total: user.solvedQuestions.length, message: 'Solved question removed' });
+  } catch (error) {
+    console.error('Remove solved question error:', error);
+    res.status(500).json({ message: 'Unable to remove solved question' });
   }
 });
 

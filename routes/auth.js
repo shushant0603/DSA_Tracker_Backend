@@ -1,11 +1,15 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { generateOTP, sendOTPEmail, sendWelcomeEmail } = require('../utils/emailService');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID || '799155792066-aa600l6md03tov4orkag4ki6fhv4akdq.apps.googleusercontent.com'
+);
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -266,6 +270,83 @@ router.post('/login', [
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
+  }
+});
+
+// @route   POST /api/auth/google
+// @desc    Authenticate with Google OAuth ID token
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: 'Google credential token is required' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID || '799155792066-aa600l6md03tov4orkag4ki6fhv4akdq.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(400).json({ message: 'Invalid Google token payload' });
+    }
+
+    const { sub: googleId, email, name, picture } = payload;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user already exists with this googleId or email
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: normalizedEmail }]
+    });
+
+    if (user) {
+      let needsSave = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        needsSave = true;
+      }
+      if (picture && !user.picture) {
+        user.picture = picture;
+        needsSave = true;
+      }
+      if (!user.isVerified) {
+        user.isVerified = true;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await user.save();
+      }
+    } else {
+      user = new User({
+        name: name || normalizedEmail.split('@')[0],
+        email: normalizedEmail,
+        googleId,
+        picture: picture || null,
+        isVerified: true,
+      });
+      await user.save();
+    }
+
+    const token = generateToken(user._id);
+
+    return res.json({
+      message: 'Google login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        preferences: user.preferences,
+        platformUsernames: user.platformUsernames,
+        hasPlatformData: user.hasPlatformData
+      }
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    return res.status(401).json({ message: 'Google authentication failed: ' + (error.message || 'invalid token') });
   }
 });
 
